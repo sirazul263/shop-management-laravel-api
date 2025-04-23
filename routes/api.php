@@ -48,7 +48,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Purchases
         Route::get('/purchases', [PurchaseController::class, 'getAllPurchases'])->name('getAllPurchases');
         Route::post('/purchases/create', [PurchaseController::class, 'addPurchase'])->name('addPurchase');
-        
+
         // Sell
         Route::get('/sells', [SellController::class, 'getAllSells'])->name('getAllSells');
         Route::post('/sells/create', [SellController::class, 'createSell'])->name('createSell');
@@ -58,8 +58,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         // Auth routes
         Route::get('/users', [AuthController::class, 'getUsers'])->name('getUsers');
-    
+
     });
 
+    Route::post('/create-user', [AuthController::class, 'createUser'])->name('createUser')->middleware('isAdmin');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });

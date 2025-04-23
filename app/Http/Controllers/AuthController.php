@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Store;
+use App\Http\Requests\UserRequest;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
@@ -72,11 +72,10 @@ class AuthController extends Controller
         return response()->json(['message' => 'Logged out successfully']);
     }
 
-    public function getUsers($storeId)
+    public function getUsers()
     {
         try {
-            $store = Store::find($storeId)->first();
-            $users = $store->users;
+            $users = User::with('stores')->get();
 
             return response()->json([
                 'status' => 1,
@@ -88,6 +87,34 @@ class AuthController extends Controller
             return response()->json([
                 'status' => 0,
                 'message' => 'Failed to retrieve users'],
+                500);
+        }
+    }
+
+    public function createUser(UserRequest $request)
+    {
+        try {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => $request->role,
+            ]);
+
+            // Attach the store_id to the user via the pivot table
+            $user->stores()->attach($request->store_id);
+
+            return response()->json([
+                'status' => 1,
+                'message' => 'Users created successfully',
+                'data' => $user,
+            ],
+                200);
+        } catch (Exception $e) {
+
+            return response()->json([
+                'status' => 0,
+                'message' => 'Failed to create user'],
                 500);
         }
     }
