@@ -37,16 +37,29 @@ class AuthController extends Controller
     // Log in a user and generate a token
     public function login(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'email' => 'required|string|email',
             'password' => 'required|string',
         ]);
 
-        if (! Auth::attempt($request->only('email', 'password'))) {
-            return response()->json(['message' => 'Invalid credentials'], 422);
+        if (! Auth::attempt($validated)) {
+            return response()->json([
+                'status' => 0,
+                'message' => 'Invalid credentials',
+            ], 422);
         }
 
         $user = Auth::user();
+
+        if ($user->status === 'INACTIVE') {
+            Auth::logout(); // Logout immediately if status is INACTIVE
+
+            return response()->json([
+                'status' => 0,
+                'message' => 'Your account is inactive. Please contact support.',
+            ], 403);
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -119,28 +132,102 @@ class AuthController extends Controller
         }
     }
 
-    public function changePassword(Request $request)
+    public function updateUser($userId, Request $request)
     {
-        $request->validate([
-            'current_password' => ['required', 'string', 'min:8'],
-            'new_password' => ['required', 'string', 'min:8', 'different:current_password', 'confirmed'],
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+                'status' => ['required', 'in:ACTIVE,INACTIVE'],
+            ]);
 
-        $user = Auth::user();
+            $user = User::find($userId);
+            if (! $user) {
+                return response()->json([
+                    'status' => 0,
+                    'message' => 'User not found',
+                ]);
+            }
+            $user->status = $validated['status'];
+            $user->name = $validated['name'];
+            $user->save();
 
-        if (! Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'status' => 1,
+                'message' => 'User updated successfully.',
+            ]);
+
+        } catch (Exception $e) {
             return response()->json([
                 'status' => 0,
-                'message' => 'Current password is incorrect.'],
-                422);
+                'message' => 'Failed to update user'],
+                500);
+        }
+    }
+
+    public function statusUpdate(Request $request)
+    {
+        try {
+
+            $validated = $request->validate([
+                'user_id' => ['required', 'integer', 'exists:users,id'],
+                'status' => ['required', 'in:ACTIVE,INACTIVE'],
+            ]);
+
+            $user = User::find($validated['user_id']);
+
+            if (! $user) {
+                return response()->json([
+                    'status' => 0,
+                    'message' => 'User not found',
+                ]);
+            }
+
+            $user->status = $validated['status'];
+            $user->save();
+
+            return response()->json([
+                'status' => 1,
+                'message' => 'Status changed successfully.',
+            ]);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 0,
+                'message' => 'Failed to change status'],
+                500);
+        }
+    }
+
+    public function changePassword(Request $request)
+    {
+        try {
+            $request->validate([
+                'current_password' => ['required', 'string', 'min:8'],
+                'new_password' => ['required', 'string', 'min:8', 'different:current_password', 'confirmed'],
+            ]);
+
+            $user = Auth::user();
+
+            if (! Hash::check($request->current_password, $user->password)) {
+                return response()->json([
+                    'status' => 0,
+                    'message' => 'Current password is incorrect.'],
+                    422);
+            }
+
+            $user->password = Hash::make($request->new_password);
+            $user->save();
+
+            return response()->json([
+                'status' => 1,
+                'message' => 'Password changed successfully.',
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 0,
+                'message' => 'Failed to change password'],
+                500);
         }
 
-        $user->password = Hash::make($request->new_password);
-        $user->save();
-
-        return response()->json([
-            'status' => 1,
-            'message' => 'Password changed successfully.',
-        ]);
     }
 }

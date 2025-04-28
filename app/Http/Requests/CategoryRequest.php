@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CategoryRequest extends FormRequest
 {
@@ -22,10 +23,19 @@ class CategoryRequest extends FormRequest
     public function rules(): array
     {
         $id = $this->route('categoryId');
+        $storeId = $this->route('storeId') ?? $this->store_id;
 
         return [
             'store_id' => ['required', 'exists:stores,id'],
-            'name' => ['required', 'unique:categories,name,'.$id, 'string', 'min:3', 'max:255'],
+            'name' => [
+                'required',
+                'string',
+                'min:3',
+                'max:255',
+                Rule::unique('categories', 'name')
+                    ->where('store_id', $storeId)
+                    ->ignore($id), // ignore current brand if updating
+            ],
             'is_active' => ['required', 'boolean'],
             'image' => ['sometimes'],
         ];

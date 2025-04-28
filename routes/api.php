@@ -62,6 +62,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     Route::post('/create-user', [AuthController::class, 'createUser'])->name('createUser')->middleware('isAdmin');
+    Route::put('/user/update/{userId}', [AuthController::class, 'updateUser'])->name('updateUser')->middleware('isAdmin');
+    Route::put('/user/change-status', [AuthController::class, 'statusUpdate'])->name('statusUpdate')->middleware('isAdmin');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::post('/change-password', [AuthController::class, 'changePassword'])->name('changePassword');
 });
