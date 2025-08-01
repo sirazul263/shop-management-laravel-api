@@ -44,4 +44,9 @@ class Product extends Model
     {
         return $this->hasMany(PurchaseItem::class);
     }
+
+    public function imeis(): HasMany
+    {
+        return $this->hasMany(Imei::class);
+    }
 }

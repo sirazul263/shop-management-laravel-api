@@ -22,19 +22,37 @@ class PurchaseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'supplier_id' => ['required', 'integer', 'exists:suppliers,id'], // Ensure supplier_id is an integer and exists
-            'products' => ['required', 'array'], // Validate that products is an array
-            'products.*.id' => ['required', 'integer', 'exists:products,id'], // Each product must have a valid ID
-            'products.*.quantity' => ['required', 'integer', 'min:1'], // Quantity must be at least 1
-            'products.*.price' => ['required', 'numeric', 'min:0'], // Price must be non-negative
-            'products.*.sell_price' => ['required', 'numeric', 'min:0'], // Sell price must be non-negative
-            'purchase_date' => ['required', 'date_format:d-m-Y H:i:s'], // Validate date format
-            'discount_type' => ['nullable', 'in:PERCENTAGE,FIXED'], // Ensure discount_type is valid or null
-            'discount_amount' => ['nullable', 'numeric', 'min:0'], // Discount amount must be non-negative
-            'payment_method' => ['required', 'string'], // Payment method must be a string
-            'payment_status' => ['required', 'string', 'in:PENDING,PAID'], // Validate payment status
-            'notes' => ['nullable', 'string'], // Notes can be null or a string
+            'supplier_id' => ['required', 'integer', 'exists:suppliers,id'],
+            'products' => ['required', 'array'],
+            'products.*.id' => ['required', 'integer', 'exists:products,id'],
+            'products.*.quantity' => ['required', 'integer', 'min:1'],
+            'products.*.price' => ['required', 'numeric', 'min:0'],
+            'products.*.sell_price' => ['required', 'numeric', 'min:0'],
+            'products.*.imeis' => ['required', 'array'], // <-- New imeis array per product
+            'products.*.imeis.*' => ['required', 'string'], // Each IMEI must be a string
+            'purchase_date' => ['required', 'date_format:d-m-Y H:i:s'],
+            'discount_type' => ['nullable', 'in:PERCENTAGE,FIXED'],
+            'discount_amount' => ['nullable', 'numeric', 'min:0'],
+            'payment_method' => ['required', 'string'],
+            'payment_status' => ['required', 'string', 'in:PENDING,PAID'],
+            'notes' => ['nullable', 'string'],
         ];
 
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $products = $this->input('products', []);
+
+            foreach ($products as $index => $product) {
+                $quantity = $product['quantity'] ?? 0;
+                $imeis = $product['imeis'] ?? [];
+
+                if (count($imeis) !== $quantity) {
+                    $validator->errors()->add("products.$index.imeis", "The number of IMEIs must match the quantity for product at index $index.");
+                }
+            }
+        });
     }
 }

@@ -15,6 +15,7 @@ class PurchaseItem extends Model
         'quantity',
         'unit_amount',
         'total_amount',
+        'imei',
     ];
 
     public function purchase(): BelongsTo

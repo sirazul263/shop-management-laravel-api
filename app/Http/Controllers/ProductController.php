@@ -17,7 +17,7 @@ class ProductController extends Controller
     public function getAllProducts($storeId)
     {
         try {
-            $products = Product::with(['user', 'brand', 'category'])->where('store_id', $storeId)->orderBy('created_at', 'desc')->get();
+            $products = Product::with(['user', 'brand', 'category' , 'imeis'])->where('store_id', $storeId)->orderBy('created_at', 'desc')->get();
 
             return response()->json([
                 'status' => 1,
