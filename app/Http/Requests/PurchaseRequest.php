@@ -28,8 +28,8 @@ class PurchaseRequest extends FormRequest
             'products.*.quantity' => ['required', 'integer', 'min:1'],
             'products.*.price' => ['required', 'numeric', 'min:0'],
             'products.*.sell_price' => ['required', 'numeric', 'min:0'],
-            'products.*.imeis' => ['required', 'array'], // <-- New imeis array per product
-            'products.*.imeis.*' => ['required', 'string'], // Each IMEI must be a string
+            'products.*.imei' => ['required', 'array'], // <-- New imeis array per product
+            'products.*.imei.*' => ['required', 'string'], // Each IMEI must be a string
             'purchase_date' => ['required', 'date_format:d-m-Y H:i:s'],
             'discount_type' => ['nullable', 'in:PERCENTAGE,FIXED'],
             'discount_amount' => ['nullable', 'numeric', 'min:0'],
@@ -47,10 +47,10 @@ class PurchaseRequest extends FormRequest
 
             foreach ($products as $index => $product) {
                 $quantity = $product['quantity'] ?? 0;
-                $imeis = $product['imeis'] ?? [];
+                $imeis = $product['imei'] ?? [];
 
                 if (count($imeis) !== $quantity) {
-                    $validator->errors()->add("products.$index.imeis", "The number of IMEIs must match the quantity for product at index $index.");
+                    $validator->errors()->add("products.$index.imei", "The number of IMEIs must match the quantity for product at index $index.");
                 }
             }
         });

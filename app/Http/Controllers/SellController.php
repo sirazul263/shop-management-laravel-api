@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\SellRequest;
+use App\Models\Imei;
 use App\Models\Product;
 use App\Models\Sell;
 use Carbon\Carbon;
@@ -76,7 +77,16 @@ class SellController extends Controller
                         'quantity' => $product['quantity'],
                         'unit_amount' => $product['unit_amount'],
                         'total_amount' => $product['unit_amount'] * $product['quantity'],
+                        'imei' => ! empty($product['imei']) && is_array($product['imei'])
+                        ? implode(',', $product['imei'])
+                        : null,
                     ];
+                    // Delete IMEIs linked to this product & sold
+                    if (! empty($product['imei']) && is_array($product['imei'])) {
+                        Imei::where('product_id', $item->id)
+                            ->whereIn('imei', $product['imei'])
+                            ->delete();
+                    }
                 } else {
                     throw new \Exception("Product with ID {$product['id']} not found.");
                 }

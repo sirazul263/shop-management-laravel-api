@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\ActivityTrait;
 use App\Http\Requests\PurchaseRequest;
+use App\Models\Imei;
 use App\Models\Product;
 use App\Models\Purchase;
 use Carbon\Carbon;
@@ -82,7 +83,22 @@ class PurchaseController extends Controller
                         'quantity' => $product['quantity'],
                         'unit_amount' => $product['price'],
                         'total_amount' => $product['price'] * $product['quantity'],
+                        'imei' => ! empty($product['imei']) && is_array($product['imei'])
+                        ? implode(',', $product['imei'])
+                        : null,
                     ];
+
+                    // Insert IMEI numbers
+                    if (! empty($product['imei']) && is_array($product['imei'])) {
+                        foreach ($product['imei'] as $imei) {
+                            if (! empty($imei)) {
+                                Imei::create([
+                                    'product_id' => $item->id,
+                                    'imei' => $imei,
+                                ]);
+                            }
+                        }
+                    }
                 } else {
                     throw new \Exception("Product with ID {$product['id']} not found.");
                 }
