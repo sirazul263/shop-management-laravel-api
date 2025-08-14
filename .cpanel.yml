@@ -1,25 +1,29 @@
 ---
 deployment:
   tasks:
-    # 1. Set deployment path (change to your public_html subfolder if Laravel is not directly in it)
+    # 1. Set deployment path (your Laravel project folder)
     - export DEPLOYPATH=/home/amirul1do/shop-management-laravel-api
 
-    # 2. Install Composer dependencies
-    - /opt/cpanel/composer/bin/composer install --no-interaction --prefer-dist --optimize-autoloader --working-dir=$DEPLOYPATH
+    # 2. Detect Composer and PHP dynamically
+    - export COMPOSER=$(which composer)
+    - export PHP=$(which php)
 
-    # 3. Run database migrations
-    - /opt/cpanel/composer/bin/php $DEPLOYPATH/artisan migrate --force
+    # 3. Install Composer dependencies
+    - $COMPOSER install --no-interaction --prefer-dist --optimize-autoloader --working-dir=$DEPLOYPATH
 
-    # 4. Clear and rebuild caches
-    - /opt/cpanel/composer/bin/php $DEPLOYPATH/artisan config:clear
-    - /opt/cpanel/composer/bin/php $DEPLOYPATH/artisan cache:clear
-    - /opt/cpanel/composer/bin/php $DEPLOYPATH/artisan route:clear
-    - /opt/cpanel/composer/bin/php $DEPLOYPATH/artisan view:clear
-    - /opt/cpanel/composer/bin/php $DEPLOYPATH/artisan config:cache
-    - /opt/cpanel/composer/bin/php $DEPLOYPATH/artisan route:cache
-    - /opt/cpanel/composer/bin/php $DEPLOYPATH/artisan view:cache
+    # 4. Run database migrations
+    - $PHP $DEPLOYPATH/artisan migrate --force
 
-    # 5. Set correct permissions for Laravel writable directories
+    # 5. Clear and rebuild Laravel caches
+    - $PHP $DEPLOYPATH/artisan config:clear
+    - $PHP $DEPLOYPATH/artisan cache:clear
+    - $PHP $DEPLOYPATH/artisan route:clear
+    - $PHP $DEPLOYPATH/artisan view:clear
+    - $PHP $DEPLOYPATH/artisan config:cache
+    - $PHP $DEPLOYPATH/artisan route:cache
+    - $PHP $DEPLOYPATH/artisan view:cache
+
+    # 6. Fix permissions for writable folders
     - /bin/find $DEPLOYPATH/storage -type d -exec chmod 775 {} \;
     - /bin/find $DEPLOYPATH/bootstrap/cache -type d -exec chmod 775 {} \;
     - /bin/find $DEPLOYPATH/storage -type f -exec chmod 664 {} \;
