@@ -1,6 +1,6 @@
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/softopkg/shop-management-laravel-api
+    - export DEPLOYPATH=/home/amirul1do/shop-management-laravel-api
     # Go to the repository directory
     - /bin/echo "🔄 Pulling latest changes..."
     - /bin/git -C $DEPLOYPATH pull origin main       # change branch if needed
