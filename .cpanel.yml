@@ -1,0 +1,29 @@
+---
+deployment:
+  tasks:
+    # 1. Navigate to project root
+    - export DEPLOYPATH=/home/amirul1do/shop-management-laravel-api
+
+    # 2. Pull latest changes (optional if cPanel already does it)
+    - /bin/git pull origin main
+
+    # 3. Install PHP dependencies (Composer)
+    - /bin/composer install --no-interaction --prefer-dist --optimize-autoloader
+
+    # 4. Migration
+    - /usr/local/bin/php $DEPLOYPATH/artisan migrate
+
+    # 5. Clear and cache Laravel configs (if Laravel)
+    - /usr/local/bin/php $DEPLOYPATH/artisan optimize:clear
+
+    # 6. Copy project files to deployment path
+    # - /bin/cp -R * $DEPLOYPATH
+
+    # 7. Set correct permissions
+    # - /bin/find $DEPLOYPATH -type f -exec chmod 644 {} \;
+    # - /bin/find $DEPLOYPATH -type d -exec chmod 755 {} \;
+
+    # 8. Clear and cache Laravel configs (if Laravel)
+    # - /usr/local/bin/php $DEPLOYPATH/artisan config:cache
+    # - /usr/local/bin/php $DEPLOYPATH/artisan route:cache
+    # - /usr/local/bin/php $DEPLOYPATH/artisan view:cache
