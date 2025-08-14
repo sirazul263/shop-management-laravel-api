@@ -1,30 +1,36 @@
----
 deployment:
   tasks:
-    # 1. Set deployment path (your Laravel project folder)
     - export DEPLOYPATH=/home/amirul1do/shop-management-laravel-api
+    # Go to the repository directory
+    - /bin/echo "🔄 Starting deployment..."
+    - /bin/cd $DEPLOYPATH
 
-    # 2. Detect Composer and PHP dynamically
-    - export COMPOSER=$(which composer)
-    - export PHP=$(which php)
+    # Put site into maintenance mode
+    - /bin/php artisan down || true
 
-    # 3. Install Composer dependencies
-    - $COMPOSER install --no-interaction --prefer-dist --optimize-autoloader --working-dir=$DEPLOYPATH
+    # Pull latest changes from Git
+    - /bin/git pull origin main   # change 'main' to your branch
 
-    # 4. Run database migrations
-    - $PHP $DEPLOYPATH/artisan migrate --force
+    # Install/update PHP dependencies
+    - /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader
 
-    # 5. Clear and rebuild Laravel caches
-    - $PHP $DEPLOYPATH/artisan config:clear
-    - $PHP $DEPLOYPATH/artisan cache:clear
-    - $PHP $DEPLOYPATH/artisan route:clear
-    - $PHP $DEPLOYPATH/artisan view:clear
-    - $PHP $DEPLOYPATH/artisan config:cache
-    - $PHP $DEPLOYPATH/artisan route:cache
-    - $PHP $DEPLOYPATH/artisan view:cache
+    # Clear & cache Laravel configuration/routes/views
+    - /bin/php artisan config:clear
+    - /bin/php artisan route:clear
+    - /bin/php artisan view:clear
+    - /bin/php artisan cache:clear
+    - /bin/php artisan config:cache
+    - /bin/php artisan route:cache
+    - /bin/php artisan view:cache
 
-    # 6. Fix permissions for writable folders
-    - /bin/find $DEPLOYPATH/storage -type d -exec chmod 775 {} \;
-    - /bin/find $DEPLOYPATH/bootstrap/cache -type d -exec chmod 775 {} \;
-    - /bin/find $DEPLOYPATH/storage -type f -exec chmod 664 {} \;
-    - /bin/find $DEPLOYPATH/bootstrap/cache -type f -exec chmod 664 {} \;
+    # Run database migrations
+    - /bin/php artisan migrate --force
+
+    # Set correct permissions
+    - /bin/chmod -R 775 storage bootstrap/cache
+    - /bin/chown -R USERNAME:USERNAME storage bootstrap/cache  # change USERNAME
+
+    # Bring site back online
+    - /bin/php artisan up
+
+    - /bin/echo "✅ Deployment finished!"
