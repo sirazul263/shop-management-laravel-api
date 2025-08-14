@@ -1,36 +1,3 @@
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/amirul1do/shop-management-laravel-api
-    # Go to the repository directory
-    - /bin/echo "🔄 Starting deployment..."
-    - /bin/cd $DEPLOYPATH
-
-    # Put site into maintenance mode
-    - /bin/php artisan down || true
-
-    # Pull latest changes from Git
-    - /bin/git pull origin main   # change 'main' to your branch
-
-    # Install/update PHP dependencies
-    - /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader
-
-    # Clear & cache Laravel configuration/routes/views
-    - /bin/php artisan config:clear
-    - /bin/php artisan route:clear
-    - /bin/php artisan view:clear
-    - /bin/php artisan cache:clear
-    - /bin/php artisan config:cache
-    - /bin/php artisan route:cache
-    - /bin/php artisan view:cache
-
-    # Run database migrations
-    - /bin/php artisan migrate --force
-
-    # Set correct permissions
-    - /bin/chmod -R 775 storage bootstrap/cache
-    - /bin/chown -R USERNAME:USERNAME storage bootstrap/cache  # change USERNAME
-
-    # Bring site back online
-    - /bin/php artisan up
-
-    - /bin/echo "✅ Deployment finished!"
+    - /bin/echo "🚀 CPanel deployment triggered successfully!"
