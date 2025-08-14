@@ -1,29 +1,26 @@
 ---
 deployment:
   tasks:
-    # 1. Navigate to project root
+    # 1. Set deployment path (change to your public_html subfolder if Laravel is not directly in it)
     - export DEPLOYPATH=/home/amirul1do/shop-management-laravel-api
 
-    # 2. Pull latest changes (optional if cPanel already does it)
-    - /bin/git pull origin main
+    # 2. Install Composer dependencies
+    - /usr/local/bin/composer install --no-interaction --prefer-dist --optimize-autoloader --working-dir=$DEPLOYPATH
 
-    # 3. Install PHP dependencies (Composer)
-    - /bin/composer install --no-interaction --prefer-dist --optimize-autoloader
+    # 3. Run database migrations
+    - /usr/local/bin/php $DEPLOYPATH/artisan migrate --force
 
-    # 4. Migration
-    - /usr/local/bin/php $DEPLOYPATH/artisan migrate
+    # 4. Clear and rebuild caches
+    - /usr/local/bin/php $DEPLOYPATH/artisan config:clear
+    - /usr/local/bin/php $DEPLOYPATH/artisan cache:clear
+    - /usr/local/bin/php $DEPLOYPATH/artisan route:clear
+    - /usr/local/bin/php $DEPLOYPATH/artisan view:clear
+    - /usr/local/bin/php $DEPLOYPATH/artisan config:cache
+    - /usr/local/bin/php $DEPLOYPATH/artisan route:cache
+    - /usr/local/bin/php $DEPLOYPATH/artisan view:cache
 
-    # 5. Clear and cache Laravel configs (if Laravel)
-    - /usr/local/bin/php $DEPLOYPATH/artisan optimize:clear
-
-    # 6. Copy project files to deployment path
-    # - /bin/cp -R * $DEPLOYPATH
-
-    # 7. Set correct permissions
-    # - /bin/find $DEPLOYPATH -type f -exec chmod 644 {} \;
-    # - /bin/find $DEPLOYPATH -type d -exec chmod 755 {} \;
-
-    # 8. Clear and cache Laravel configs (if Laravel)
-    # - /usr/local/bin/php $DEPLOYPATH/artisan config:cache
-    # - /usr/local/bin/php $DEPLOYPATH/artisan route:cache
-    # - /usr/local/bin/php $DEPLOYPATH/artisan view:cache
+    # 5. Set correct permissions for Laravel writable directories
+    - /bin/find $DEPLOYPATH/storage -type d -exec chmod 775 {} \;
+    - /bin/find $DEPLOYPATH/bootstrap/cache -type d -exec chmod 775 {} \;
+    - /bin/find $DEPLOYPATH/storage -type f -exec chmod 664 {} \;
+    - /bin/find $DEPLOYPATH/bootstrap/cache -type f -exec chmod 664 {} \;
