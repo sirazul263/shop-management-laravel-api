@@ -1,38 +1,26 @@
-name: Deploy Laravel Project on push
+---
+deployment:
+  tasks:
+    # 1. Set deployment path (change to your public_html subfolder if Laravel is not directly in it)
+    - export DEPLOYPATH=/home/amirul1do/shop-management-laravel-api
 
-on:
-  push:
-    branches:
-      - main
+    # 2. Install Composer dependencies
+    - /opt/cpanel/composer/bin/composer install --no-interaction --prefer-dist --optimize-autoloader --working-dir=$DEPLOYPATH
 
-jobs:
-  deploy-production:
-    if: github.ref == 'refs/heads/main'
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get the latest code
-        uses: actions/checkout@v2.3.2
+    # 3. Run database migrations
+    - /opt/cpanel/composer/bin/php $DEPLOYPATH/artisan migrate --force
 
-      - uses: actions/setup-node@master
+    # 4. Clear and rebuild caches
+    - /opt/cpanel/composer/bin/php $DEPLOYPATH/artisan config:clear
+    - /opt/cpanel/composer/bin/php $DEPLOYPATH/artisan cache:clear
+    - /opt/cpanel/composer/bin/php $DEPLOYPATH/artisan route:clear
+    - /opt/cpanel/composer/bin/php $DEPLOYPATH/artisan view:clear
+    - /opt/cpanel/composer/bin/php $DEPLOYPATH/artisan config:cache
+    - /opt/cpanel/composer/bin/php $DEPLOYPATH/artisan route:cache
+    - /opt/cpanel/composer/bin/php $DEPLOYPATH/artisan view:cache
 
-      - name: Copy .env
-        run: php -r "file_exists('.env') || copy('.env.prod', '.env');"
-      - name: Install Dependencies
-        run: composer update --ignore-platform-reqs
-
-      - name: Generate key
-        run: php artisan key:generate
-
-      - name: Generate storage link
-        run: php artisan storage:link
-
-      - name: Directory Permissions
-        run: chmod -R 777 storage bootstrap/cache
-
-      - name: 📂 Sync files to Production
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
+    # 5. Set correct permissions for Laravel writable directories
+    - /bin/find $DEPLOYPATH/storage -type d -exec chmod 775 {} \;
+    - /bin/find $DEPLOYPATH/bootstrap/cache -type d -exec chmod 775 {} \;
+    - /bin/find $DEPLOYPATH/storage -type f -exec chmod 664 {} \;
+    - /bin/find $DEPLOYPATH/bootstrap/cache -type f -exec chmod 664 {} \;
