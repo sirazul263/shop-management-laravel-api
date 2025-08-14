@@ -1,38 +1,25 @@
-name: Deploy Laravel Project on push
+name: Deploy to cPanel via SSH
 
 on:
   push:
     branches:
-      - main
+      - main  # deploy only when pushing to main
 
 jobs:
-  deploy-production:
-    if: github.ref == 'refs/heads/main'
-    name: Deploy to Production
+  deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Get the latest code
-        uses: actions/checkout@v2.3.2
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@master
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/siraz_rsa
+          chmod 600 ~/.ssh/siraz_rsa
+          ssh-keyscan -p ${{ secrets.CPANEL_PORT }} ${{ secrets.CPANEL_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Copy .env
-        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
-      - name: Install Dependencies
-        run: composer update --ignore-platform-reqs
-
-      - name: Generate key
-        run: php artisan key:generate
-
-      - name: Generate storage link
-        run: php artisan storage:link
-
-      - name: Directory Permissions
-        run: chmod -R 777 storage bootstrap/cache
-
-      - name: 📂 Sync files to Production
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
+      - name: Deploy via rsync
+        run: |
+          rsync -avz --delete -e "ssh -p ${{ secrets.CPANEL_PORT }}" ./ ${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }}:/home/${{ secrets.CPANEL_USER }}/public_html/
