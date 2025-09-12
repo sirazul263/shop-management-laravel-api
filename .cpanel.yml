@@ -1,30 +1,11 @@
----
 deployment:
   tasks:
-    # 1. Set deployment path (your Laravel project folder)
     - export DEPLOYPATH=/home/amirul1do/shop-management-laravel-api
+    # Go to the repository directory
+    - /bin/echo "🔄 Pulling latest changes..."
+    - /bin/git -C $DEPLOYPATH pull origin main       # change branch if needed
 
-    # 2. Detect Composer and PHP dynamically
-    - export COMPOSER=$(which composer)
-    - export PHP=$(which php)
+    # Install composer deps
+    - /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader -d $DEPLOYPATH
 
-    # 3. Install Composer dependencies
-    - $COMPOSER install --no-interaction --prefer-dist --optimize-autoloader --working-dir=$DEPLOYPATH
-
-    # 4. Run database migrations
-    - $PHP $DEPLOYPATH/artisan migrate --force
-
-    # 5. Clear and rebuild Laravel caches
-    - $PHP $DEPLOYPATH/artisan config:clear
-    - $PHP $DEPLOYPATH/artisan cache:clear
-    - $PHP $DEPLOYPATH/artisan route:clear
-    - $PHP $DEPLOYPATH/artisan view:clear
-    - $PHP $DEPLOYPATH/artisan config:cache
-    - $PHP $DEPLOYPATH/artisan route:cache
-    - $PHP $DEPLOYPATH/artisan view:cache
-
-    # 6. Fix permissions for writable folders
-    - /bin/find $DEPLOYPATH/storage -type d -exec chmod 775 {} \;
-    - /bin/find $DEPLOYPATH/bootstrap/cache -type d -exec chmod 775 {} \;
-    - /bin/find $DEPLOYPATH/storage -type f -exec chmod 664 {} \;
-    - /bin/find $DEPLOYPATH/bootstrap/cache -type f -exec chmod 664 {} \;
+    - /bin/echo "✅ Deployment finished!"
