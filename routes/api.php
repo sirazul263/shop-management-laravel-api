@@ -22,6 +22,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Stores
     Route::get('/stores', [StoreController::class, 'getStores'])->name('getStores');
     Route::post('/stores/create', [StoreController::class, 'createStore'])->name('createStore');
+    Route::put('/stores/{storeId}', [StoreController::class, 'updateStore'])->name('updateStore');
+    Route::delete('/stores/{storeId}', [StoreController::class, 'deleteStore'])->name('deleteStore');
 
     Route::prefix('/{storeId}')->middleware(['checkUserStore'])->group(function () {
         // Category
