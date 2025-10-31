@@ -56,6 +56,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Sell
         Route::get('/sells', [SellController::class, 'getAllSells'])->name('getAllSells');
         Route::post('/sells/create', [SellController::class, 'createSell'])->name('createSell');
+        Route::get('/due-amount', [SellController::class, 'getDueAmount'])->name('getDueAmount');
+        Route::post('/due-amount/update', [SellController::class, 'updatePaidAmount'])->name('updatePaidAmount')->middleware('isAdmin');
         // Activity Logs
         Route::get('/logs', [ActivityLogController::class, 'getActivityLog'])->name('getActivityLog');
         Route::get('/dashboard', [DashboardController::class, 'getDashboardData'])->name('getDashboardData');
@@ -68,6 +70,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/create-user', [AuthController::class, 'createUser'])->name('createUser')->middleware('isAdmin');
     Route::put('/user/update/{userId}', [AuthController::class, 'updateUser'])->name('updateUser')->middleware('isAdmin');
     Route::put('/user/change-status', [AuthController::class, 'statusUpdate'])->name('statusUpdate')->middleware('isAdmin');
+    Route::put('/user/assign-stores/{userId}', [AuthController::class, 'assignStores'])->name('assignStores')->middleware('isAdmin');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::post('/change-password', [AuthController::class, 'changePassword'])->name('changePassword');
 });

@@ -145,4 +145,84 @@ class SellController extends Controller
 
         return $total_price - $total_discount_amount;
     }
+
+    public function getDueAmount($storeId, Request $request)
+    {
+        try {
+            $sells = Sell::with([
+                'user',
+                'items.product.brand',
+                'items.product.category',
+            ])
+                ->where('store_id', $storeId)
+                ->whereColumn('total', '!=', 'total_paid')
+                ->when($request->invoiceId, function ($query, $invoiceId) {
+                    return $query->where('invoice_id', $invoiceId);
+                })
+                ->when($request->soldBy, function ($query, $soldBy) {
+                    return $query->where('user_id', $soldBy);
+                })
+                ->when($request->customer, function ($query, $customer) {
+                    return $query->where('name', 'like', '%'.$customer.'%');
+                })
+                ->when($request->date, function ($query, $date) {
+                    $formattedDate = Carbon::createFromFormat('d/m/Y', $date)->format('Y-m-d');
+
+                    return $query->whereDate('created_at', $formattedDate);
+                })
+                ->orderBy('created_at', 'desc')
+                ->paginate(10, ['*'], 'page', $request->page);
+
+            return response()->json([
+                'status' => 1,
+                'message' => 'Sells retrieved successfully',
+                'data' => $sells,
+            ], 200);
+        } catch (Exception $e) {
+            Log::error('Error on get sells '.$e->getMessage().' on line '.$e->getLine().' in file '.$e->getFile());
+
+            return response()->json([
+                'status' => 0,
+                'message' => 'Failed to retrieve sells',
+            ], 500);
+        }
+    }
+
+    public function updatePaidAmount(Request $request)
+    {
+        $request->validate([
+            'sell_id' => 'required|exists:sells,id',
+            'amount' => 'required|numeric|min:0.01',
+        ]);
+
+        try {
+            $sell = Sell::findOrFail($request->sell_id);
+
+            // Update total_paid
+            $sell->total_paid += $request->amount;
+
+            // Ensure total_paid doesn't exceed total
+            if ($sell->total_paid > $sell->total) {
+                return response()->json([
+                    'status' => 0,
+                    'message' => 'Payment exceeds total amount',
+                ], 400);
+            }
+
+            $sell->save();
+
+            return response()->json([
+                'status' => 1,
+                'message' => 'Payment added successfully',
+                'data' => $sell,
+            ], 200);
+        } catch (Exception $e) {
+            Log::error('Error on makeSellPaid: '.$e->getMessage().' on line '.$e->getLine());
+
+            return response()->json([
+                'status' => 0,
+                'message' => 'Failed to add payment',
+            ], 500);
+        }
+    }
 }

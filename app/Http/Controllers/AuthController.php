@@ -142,6 +142,7 @@ class AuthController extends Controller
             $validated = $request->validate([
                 'name' => ['required', 'string', 'max:255'],
                 'status' => ['required', 'in:ACTIVE,INACTIVE'],
+                'email' => ['required,email,unique:users'],
             ]);
 
             $user = User::find($userId);
@@ -199,6 +200,41 @@ class AuthController extends Controller
                 'status' => 0,
                 'message' => 'Failed to change status'],
                 500);
+        }
+    }
+
+    public function assignStores(Request $request, $userId)
+    {
+        $request->validate([
+            'store_ids' => 'nullable|array',
+            'store_ids.*' => 'exists:stores,id',
+        ]);
+
+        try {
+            $user = User::findOrFail($userId);
+
+            if ($request->filled('store_ids')) {
+                // Replace existing stores with new ones
+                $user->stores()->sync($request->store_ids);
+            } else {
+                // If empty or null, detach all stores
+                $user->stores()->detach();
+            }
+
+            return response()->json([
+                'status' => 1,
+                'message' => 'Stores assigned successfully',
+                'data' => [
+                    'user' => $user->only(['id', 'name', 'email']),
+                ],
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 0,
+                'message' => 'Failed to assign stores',
+                'error' => $e->getMessage(),
+            ], 500);
         }
     }
 
