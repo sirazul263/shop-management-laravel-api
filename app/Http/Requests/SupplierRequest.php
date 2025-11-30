@@ -35,7 +35,16 @@ class SupplierRequest extends FormRequest
                     ->where('store_id', $storeId)
                     ->ignore($id),
             ],
-            'email' => ['required', 'email', 'unique:suppliers,email,'.$id, 'string', 'min:3'],
+           'email' => [
+            'required',
+            'email',
+            'string',
+            'min:3',
+            'max:255',
+            Rule::unique('suppliers', 'email')
+                ->where('store_id', $storeId)
+                ->ignore($id),
+        ],
             'phone' => ['required', 'min:11', 'max:15'],
             'address' => ['required', 'string', 'min:5', 'max:255'],
         ];

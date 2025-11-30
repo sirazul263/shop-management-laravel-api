@@ -37,7 +37,7 @@ class ProductController extends Controller
     public function getSingleProduct($storeId, $productId)
     {
         try {
-            $product = Product::find($productId)->where('store_id', $storeId)->first();
+            $product = Product::find($productId)->where('store_id', $storeId)->where('id', $productId)->first();
             if (! $product) {
                 return response()->json([
                     'status' => 0,
